@@ -48,7 +48,7 @@ bot.action('buy_app', async (ctx) => {
       customer_email: 'customer@gmail.com',
       customer_phone: '9999999999',
       udf1: chatId.toString(),
-      redirect_url: 'https://t.me/FridayAIShopBot' // Isey apne bot ke username se badal sakte hain
+      redirect_url: 'https://t.me/FridayAIShopBot'
     });
 
     console.log('EKQR Raw Response:', JSON.stringify(response.data, null, 2));
@@ -80,9 +80,55 @@ bot.action('buy_app', async (ctx) => {
   }
 });
 
+// ==========================================
+// WEBHOOK ROUTE (Payment Successful hone par chalega)
+// ==========================================
+app.post('/webhook', async (req, res) => {
+  try {
+    console.log('Webhook Received:', req.body);
+    const { status, udf1, client_txn_id, upi_txn_id } = req.body;
+
+    // Check karein ki payment successful hai ya nahi
+    if (status === true || status === 'success' || status === 'SUCCESS') {
+      const chatId = udf1; // Jo chatId humne udf1 mein bheji thi
+
+      if (chatId) {
+        // Unique License Key generate karna
+        const licenseKey = 'FRIDAY-' + Math.random().toString(36).substring(2, 8).toUpperCase() + '-' + Date.now().toString().slice(-4);
+
+        // User ko Telegram par Success Message aur License Key bhejna
+        await bot.telegram.sendMessage(chatId,
+          `🎉 **Payment Successful!**\n\n` +
+          `🆔 Order ID: \`${client_txn_id}\`\n` +
+          `🔗 UPI Txn ID: \`${upi_txn_id || 'N/A'}\`\n\n` +
+          `🔑 **Your Unique License Key:**\n\`${licenseKey}\`\n\n` +
+          `Neeche aapki **FRIDAY AI APK file** di ja rahi hai. Isse install karke ye license key enter karein!`,
+          { parse_mode: 'Markdown' }
+        );
+
+        // User ko APK File bhejna (Ensure karein ki aapne project folder mein app-release.apk rakhi ho)
+        try {
+          await bot.telegram.sendDocument(chatId, {
+            source: './app-release.apk',
+            filename: 'FRIDAY_AI.apk'
+          });
+        } catch (apkErr) {
+          console.error('APK Send Error:', apkErr.message);
+          await bot.telegram.sendMessage(chatId, '⚠️ License key mil gayi hai, lekin APK file bhejte waqt error aaya. Kripya admin se contact karein.');
+        }
+      }
+    }
+
+    res.status(200).json({ status: true, message: 'Webhook handled successfully' });
+  } catch (error) {
+    console.error('Webhook Error:', error.message);
+    res.status(500).json({ status: false, error: error.message });
+  }
+});
+
 // Bot launch karein
 bot.launch();
-console.log('FRIDAY Bot ab active hai aur QR system ready hai!');
+console.log('FRIDAY Bot ab active hai aur Webhook system ready hai!');
 
 // Express Server Port (Render ke liye zaroori hai)
 const PORT = process.env.PORT || 3000;
