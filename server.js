@@ -39,14 +39,18 @@ bot.action('buy_app', async (ctx) => {
   try {
     ctx.reply('⏳ Aapka payment QR code generate ho raha hai, kripya intezaar karein...');
 
+    // EKQR API call with all possible name/email/phone field variations
     const response = await axios.post(`${EKQR_BASE_URL}/api/create_order`, {
       key: EKQR_API_KEY,
       client_txn_id: orderId,
       amount: '49',
       p_info: 'FRIDAY AI Base App',
       customer_name: customerName,
+      name: customerName,
       customer_email: 'customer@gmail.com',
+      email: 'customer@gmail.com',
       customer_phone: '9999999999',
+      phone: '9999999999',
       udf1: chatId.toString(),
       redirect_url: 'https://t.me/FridayAIShopBot'
     });
@@ -88,15 +92,12 @@ app.post('/webhook', async (req, res) => {
     console.log('Webhook Received:', req.body);
     const { status, udf1, client_txn_id, upi_txn_id } = req.body;
 
-    // Check karein ki payment successful hai ya nahi
     if (status === true || status === 'success' || status === 'SUCCESS') {
-      const chatId = udf1; // Jo chatId humne udf1 mein bheji thi
+      const chatId = udf1;
 
       if (chatId) {
-        // Unique License Key generate karna
         const licenseKey = 'FRIDAY-' + Math.random().toString(36).substring(2, 8).toUpperCase() + '-' + Date.now().toString().slice(-4);
 
-        // User ko Telegram par Success Message aur License Key bhejna
         await bot.telegram.sendMessage(chatId,
           `🎉 **Payment Successful!**\n\n` +
           `🆔 Order ID: \`${client_txn_id}\`\n` +
@@ -106,7 +107,6 @@ app.post('/webhook', async (req, res) => {
           { parse_mode: 'Markdown' }
         );
 
-        // User ko APK File bhejna (Ensure karein ki aapne project folder mein app-release.apk rakhi ho)
         try {
           await bot.telegram.sendDocument(chatId, {
             source: './app-release.apk',
@@ -130,7 +130,7 @@ app.post('/webhook', async (req, res) => {
 bot.launch();
 console.log('FRIDAY Bot ab active hai aur Webhook system ready hai!');
 
-// Express Server Port (Render ke liye zaroori hai)
+// Express Server Port
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Express server is running on port ${PORT}`);
