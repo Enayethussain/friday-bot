@@ -34,6 +34,7 @@ bot.action('buy_app', async (ctx) => {
   
   const chatId = ctx.chat.id;
   const orderId = 'ORD_' + Date.now();
+  const customerName = ctx.from.first_name || 'Valued Customer';
 
   try {
     ctx.reply('⏳ Aapka payment QR code generate ho raha hai, kripya intezaar karein...');
@@ -43,8 +44,11 @@ bot.action('buy_app', async (ctx) => {
       client_txn_id: orderId,
       amount: '49',
       p_info: 'FRIDAY AI Base App',
+      customer_name: customerName,
+      customer_email: 'customer@gmail.com',
+      customer_phone: '9999999999',
       udf1: chatId.toString(),
-      redirect_url: 'https://t.me/your_bot_username'
+      redirect_url: 'https://t.me/FridayAIShopBot' // Isey apne bot ke username se badal sakte hain
     });
 
     console.log('EKQR Raw Response:', JSON.stringify(response.data, null, 2));
