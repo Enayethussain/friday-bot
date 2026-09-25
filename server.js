@@ -27,6 +27,28 @@ bot.start((ctx) => {
   );
 });
 
+// Apne liye Free License Key lene ke liye command (/getkey)
+bot.command('getkey', async (ctx) => {
+  const licenseKey = 'FRIDAY-FREE-' + Math.random().toString(36).substring(2, 8).toUpperCase() + '-' + Date.now().toString().slice(-4);
+  
+  await ctx.reply(
+    `🎁 **Free Admin License Generated!**\n\n` +
+    `🔑 **Your License Key:**\n\`${licenseKey}\`\n\n` +
+    `Neeche aapki **FRIDAY AI APK file** di ja rahi hai:`,
+    { parse_mode: 'Markdown' }
+  );
+
+  try {
+    await ctx.replyWithDocument({
+      source: './app-release.apk',
+      filename: 'FRIDAY_AI.apk'
+    });
+  } catch (err) {
+    console.error('APK Send Error:', err.message);
+    await ctx.reply('⚠️ License key mil gayi, lekin APK file bhejte waqt error aaya.');
+  }
+});
+
 // Jab user button dabayega, tab EKQR se QR generate hoga
 bot.action('buy_app', async (ctx) => {
   console.log('>>> BUTTON CLICKED BY:', ctx.from.username || ctx.from.first_name);
