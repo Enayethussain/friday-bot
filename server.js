@@ -39,7 +39,7 @@ bot.action('buy_app', async (ctx) => {
   try {
     ctx.reply('⏳ Aapka payment QR code generate ho raha hai, kripya intezaar karein...');
 
-    // EKQR API call with all possible name/email/phone field variations
+    // EKQR API call with all name, email, and mobile variations
     const response = await axios.post(`${EKQR_BASE_URL}/api/create_order`, {
       key: EKQR_API_KEY,
       client_txn_id: orderId,
@@ -49,8 +49,10 @@ bot.action('buy_app', async (ctx) => {
       name: customerName,
       customer_email: 'customer@gmail.com',
       email: 'customer@gmail.com',
-      customer_phone: '9999999999',
-      phone: '9999999999',
+      customer_mobile: '9876543210',
+      mobile: '9876543210',
+      customer_phone: '9876543210',
+      phone: '9876543210',
       udf1: chatId.toString(),
       redirect_url: 'https://t.me/FridayAIShopBot'
     });
