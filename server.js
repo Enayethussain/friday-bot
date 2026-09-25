@@ -1,49 +1,91 @@
+const { Telegraf, Markup } = require('telegraf');
+const axios = require('axios');
 const express = require('express');
-const { Telegraf } = require('telegraf');
 
 const app = express();
 app.use(express.json());
 
-// Apne actual tokens yahan daalein (ya environment variables use karein)
-const BOT_TOKEN = '8853543182:AAFUsZqjCAHWv7RLqejdLChwND5Nz5S5nK8';
+// Express root route taaki Render par "Cannot GET /" error na aaye
+app.get('/', (req, res) => {
+  res.send('🤖 FRIDAY AI Bot Server is Live and Running!');
+});
+
+// Bot Token aur EKQR Credentials
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8853543182:AAFUsZqjCAHWv7RLqejdLChwND5Nz5S5nK8';
 const bot = new Telegraf(BOT_TOKEN);
 
-// Webhook endpoint jo EKQR se payment success hone par hit hoga
-app.post('/api/payment-webhook', async (req, res) => {
-  const payload = req.body;
+const EKQR_API_KEY = process.env.EKQR_API_KEY || '2a3c9149-8ecf-4646-b80d-6a363906d23b';
+const EKQR_BASE_URL = 'https://portal.ekqr.in';
 
-  // Check karein ki payment successful hai ya nahi
-  if (payload.status === 'success' || payload.status === 'COMPLETED') {
-    const chatId = payload.udf1; // Jo chatId humne QR banate waqt bheji thi
-    
-    // Unique License Key generate karein
-    const licenseKey = 'FRIDAY-' + Math.random().toString(36).substring(2, 8).toUpperCase() + '-' + Date.now().toString(36).toUpperCase();
+// Jab koi user bot ko /start bhejega
+bot.start((ctx) => {
+  ctx.reply(
+    `Namaste ${ctx.from.first_name}! 🤖\n\nFRIDAY AI Assistant download karne ke liye niche click karein:`,
+    Markup.inlineKeyboard([
+      [Markup.button.callback('📲 Buy FRIDAY AI App (₹49)', 'buy_app')]
+    ])
+  );
+});
 
-    try {
-      // User ko chat mein APK file aur License key bhej dein
-      await bot.telegram.sendDocument(chatId, {
-        source: './FRIDAY_AI.apk', // Aapke folder mein APK file honi chahiye
-        filename: 'FRIDAY_AI.apk'
-      }, {
-        caption: 
-          `🎉 **Payment Successful!**\n\n` +
-          `📥 Aapka FRIDAY AI APK upar bhej diya gaya hai.\n\n` +
-          `🔑 **Aapki Secret License Key:**\n\`${licenseKey}\`\n\n` +
-          `⚠️ *Dhyan dein:* Yeh key sirf aapke phone par lock hogi. Kisi aur ko share na karein.`
-      });
+// Jab user button dabayega, tab EKQR se QR generate hoga
+bot.action('buy_app', async (ctx) => {
+  console.log('>>> BUTTON CLICKED BY:', ctx.from.username || ctx.from.first_name);
+  await ctx.answerCbQuery();
+  
+  const chatId = ctx.chat.id;
+  const orderId = 'ORD_' + Date.now();
 
-    } catch (err) {
-      console.error('APK send karne mein error:', err);
+  try {
+    ctx.reply('⏳ Aapka payment QR code generate ho raha hai, kripya intezaar karein...');
+
+    const response = await axios.post(`${EKQR_BASE_URL}/api/create_order`, {
+      key: EKQR_API_KEY,
+      client_txn_id: orderId,
+      amount: '49',
+      p_info: 'FRIDAY AI Base App',
+      udf1: chatId.toString(),
+      redirect_url: 'https://t.me/your_bot_username'
+    });
+
+    console.log('EKQR Raw Response:', JSON.stringify(response.data, null, 2));
+
+    if (response.data && response.data.status === true) {
+      const qrImageUrl = response.data.data.upi_qr_code || response.data.data.qr_image;
+      const upiIntentUrl = response.data.data.upi_intent;
+
+      if (qrImageUrl) {
+        await ctx.replyWithPhoto(qrImageUrl, {
+          caption: `💳 **Scan & Pay ₹49**\n\n` +
+                   `🆔 Order ID: \`${orderId}\`\n\n` +
+                   `Payment hote hi aapko APK file aur License Key turant bhej di jayegi!`,
+          parse_mode: 'Markdown',
+          ...Markup.inlineKeyboard([
+            [Markup.button.url('🔗 Pay via UPI App', upiIntentUrl || 'https://portal.ekqr.in')]
+          ])
+        });
+      } else {
+        await ctx.reply('⚠️ QR image link nahi mila. Kripya baad mein koshish karein.');
+      }
+    } else {
+      await ctx.reply('❌ Payment order create karne mein samasya aayi: ' + (response.data.msg || 'Unknown error'));
     }
 
-    return res.status(200).json({ status: 'success' });
+  } catch (error) {
+    console.error('EKQR Error:', error.response?.data || error.message);
+    await ctx.reply('❌ Server error ki wajah se QR generate nahi ho paya. Kripya thodi der baad try karein.');
   }
-
-  res.status(200).json({ status: 'ignored' });
 });
 
-// Server Start
-const PORT = process.env.PORT || 5000;
+// Bot launch karein
+bot.launch();
+console.log('FRIDAY Bot ab active hai aur QR system ready hai!');
+
+// Express Server Port (Render ke liye zaroori hai)
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server port ${PORT} par chal raha hai!`);
+  console.log(`Express server is running on port ${PORT}`);
 });
+
+// Graceful stop
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));

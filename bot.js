@@ -6,7 +6,7 @@ const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8853543182:AAFUsZqjCAHWv7RL
 const bot = new Telegraf(BOT_TOKEN);
 
 // EKQR API Credentials (Environment variables se le ya direct daalein)
-const EKQR_API_KEY = process.env.EKQR_API_KEY || 'YAHAN_APNI_EKQR_KEY_DAALEIN';
+const EKQR_API_KEY = process.env.EKQR_API_KEY || '2a3c9149-8ecf-4646-b80d-6a363906d23b';
 const EKQR_BASE_URL = 'https://portal.ekqr.in'; // Ya aapka jo exact EKQR API base URL ho
 
 // Jab koi user bot ko /start bhejega
@@ -21,7 +21,7 @@ bot.start((ctx) => {
 
 // Jab user button dabayega, tab EKQR se QR generate hoga
 bot.action('buy_app', async (ctx) => {
-  console.log('>>> BUTTON CLICKED BY:', ctx.from.username || ctx.from.first_name);
+  
   await ctx.answerCbQuery();
   
   const chatId = ctx.chat.id;
@@ -37,7 +37,7 @@ bot.action('buy_app', async (ctx) => {
       amount: '49',
       p_info: 'FRIDAY AI Base App',
       udf1: chatId.toString(), // Webhook par pehchanne ke liye chatId
-      redirect_url: 'https://t.me/your_bot_username'
+      redirect_url: 'https://t.me/FridayAIShopBot' // Payment ke baad redirect URL
     });
 
     console.log('EKQR Raw Response:', JSON.stringify(response.data, null, 2));
