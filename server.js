@@ -17,6 +17,9 @@ const bot = new Telegraf(BOT_TOKEN);
 const EKQR_API_KEY = process.env.EKQR_API_KEY || '2a3c9149-8ecf-4646-b80d-6a363906d23b';
 const EKQR_BASE_URL = 'https://portal.ekqr.in';
 
+// ⚠️ APNI REAL TELEGRAM NUMERIC ID YAHAN DAALEIN (Jo @userinfobot se milti hai)
+const ADMIN_TELEGRAM_ID = 5964994313; // Apni asli ID se replace kar dein
+
 // Jab koi user bot ko /start bhejega
 bot.start((ctx) => {
   ctx.reply(
@@ -27,12 +30,17 @@ bot.start((ctx) => {
   );
 });
 
-// Apne liye Free License Key lene ke liye command (/getkey)
+// Sirf Admin ke liye /getkey command (Secure)
 bot.command('getkey', async (ctx) => {
-  const licenseKey = 'FRIDAY-FREE-' + Math.random().toString(36).substring(2, 8).toUpperCase() + '-' + Date.now().toString().slice(-4);
+  // Check karein ki command chalane wala asli admin hai ya nahi
+  if (ctx.from.id !== ADMIN_TELEGRAM_ID) {
+    return ctx.reply('❌ Yeh command sirf bot admin ke liye hai!');
+  }
+
+  const licenseKey = 'FRIDAY-ADMIN-' + Math.random().toString(36).substring(2, 8).toUpperCase() + '-' + Date.now().toString().slice(-4);
   
   await ctx.reply(
-    `🎁 **Free Admin License Generated!**\n\n` +
+    `🎁 **Admin Free License Generated!**\n\n` +
     `🔑 **Your License Key:**\n\`${licenseKey}\`\n\n` +
     `Neeche aapki **FRIDAY AI APK file** di ja rahi hai:`,
     { parse_mode: 'Markdown' }
@@ -76,7 +84,7 @@ bot.action('buy_app', async (ctx) => {
       customer_phone: '9876543210',
       phone: '9876543210',
       udf1: chatId.toString(),
-      redirect_url: 'https://t.me/FridayAIShopBot'
+      redirect_url: 'https://FridayAIShopBot.com' // Payment ke baad redirect URL
     });
 
     console.log('EKQR Raw Response:', JSON.stringify(response.data, null, 2));
