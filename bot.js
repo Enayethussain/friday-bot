@@ -21,6 +21,7 @@ bot.start((ctx) => {
 
 // Jab user button dabayega, tab EKQR se QR generate hoga
 bot.action('buy_app', async (ctx) => {
+  console.log('>>> BUTTON CLICKED BY:', ctx.from.username || ctx.from.first_name);
   await ctx.answerCbQuery();
   
   const chatId = ctx.chat.id;
