@@ -5,7 +5,7 @@ const app = express();
 app.use(express.json());
 
 app.get('/', (req, res) => {
-  res.send('🤖 FRIDAY AI Bot Server & License Verifier is Live!');
+  res.send('🤖 FRIDAY AI Bot & Manual Server is Live and Running!');
 });
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8853543182:AAFUsZqjCAHWv7RLqejdLChwND5Nz5S5nK8';
@@ -17,7 +17,7 @@ const ADMIN_TELEGRAM_ID = 5964994313; // Apni asli Telegram ID yahan rakhein
 const APK_DOWNLOAD_URL = 'https://drive.google.com/uc?export=download&id=11ywowcAdRe6VhUZtUHv9XhWFTDXn32FU';
 
 // Apni UPI ID yahan daalein jahan user ₹49 pay karega
-const ADMIN_UPI_ID = '8538957454@superyes'; // Apni asli UPI ID yahan daalein
+const ADMIN_UPI_ID = 'yourname@paytm'; // Apni asli UPI ID yahan daalein
 
 // Active License Keys ka memory store (Server-side validation ke liye)
 const activeLicenses = new Set();
@@ -31,18 +31,22 @@ bot.start((ctx) => {
   );
 });
 
-// Manual Payment Instructions Action
+// Manual Payment Instructions Action (No EKQR, No Error)
 bot.action('buy_app', async (ctx) => {
-  await ctx.answerCbQuery();
-  
-  await ctx.reply(
-    `💳 **Complete Your Payment (₹49)**\n\n` +
-    `Kripya niche di gayi UPI ID par **₹49** transfer karein:\n\n` +
-    `👉 UPI ID: \`${ADMIN_UPI_ID}\`\n\n` +
-    `📸 **Payment karne ke baad payment ka screenshot is chat par bhej dein.**\n` +
-    `Screenshot verify hone ke turant baad aapko **License Key** aur **App Download Link** mil jayegi!`,
-    { parse_mode: 'Markdown' }
-  );
+  try {
+    await ctx.answerCbQuery();
+    
+    await ctx.reply(
+      `💳 **Complete Your Payment (₹49)**\n\n` +
+      `Kripya niche di gayi UPI ID par **₹49** transfer karein:\n\n` +
+      `👉 UPI ID: \`${ADMIN_UPI_ID}\`\n\n` +
+      `📸 **Payment karne ke baad payment ka screenshot is chat par bhej dein.**\n` +
+      `Screenshot verify hone ke turant baad aapko **License Key** aur **App Download Link** mil jayegi!`,
+      { parse_mode: 'Markdown' }
+    );
+  } catch (error) {
+    console.error('Buy App Action Error:', error.message);
+  }
 });
 
 // Admin Free License / Verification Command (/getkey)
@@ -79,7 +83,6 @@ app.post('/api/verify-license', (req, res) => {
     return res.status(400).json({ success: false, message: 'License key is required' });
   }
 
-  // Check karo ki key active database mein hai ya nahi
   if (activeLicenses.has(licenseKey.trim())) {
     return res.status(200).json({ success: true, message: 'License verified successfully!' });
   } else {
@@ -87,7 +90,11 @@ app.post('/api/verify-license', (req, res) => {
   }
 });
 
-bot.launch();
+// Webhook / Polling setup
+bot.launch().catch((err) => {
+  console.error('Bot launch error:', err);
+});
+
 console.log('FRIDAY Bot & Manual UPI Server is running!');
 
 const PORT = process.env.PORT || 3000;
