@@ -17,7 +17,7 @@ const ADMIN_TELEGRAM_ID = 5964994313; // Apni asli Telegram ID yahan rakhein
 const APK_DOWNLOAD_URL = 'https://drive.google.com/uc?export=download&id=11ywowcAdRe6VhUZtUHv9XhWFTDXn32FU';
 
 // Apni UPI ID yahan daalein jahan user ₹49 pay karega
-const ADMIN_UPI_ID = 'yourname@paytm'; // Apni asli UPI ID yahan daalein
+const ADMIN_UPI_ID = '8538957454@superyes'; // Apni asli UPI ID yahan daalein
 
 // Active License Keys ka memory store (Server-side validation ke liye)
 const activeLicenses = new Set();
